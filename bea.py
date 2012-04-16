@@ -243,6 +243,24 @@ def s_comments(f):
     if i >= 10:
       break
  
+
+def s_labels(f):
+
+  section('General')
+
+  labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))), reverse=True)
+  total_labels = len(f['label'])
+  print('{:10,} Labels {:10.3f} Labeled per label'.format(total_labels, sum(count for count, label in labels) / total_labels))
+
+  section('Most Labeled Labels', level=2)
+  i = 0
+  for count, label in labels:
+    print('{:5}: {}'.format(count, label))
+    i += 1
+    if i >= 10:
+      break
+
+
 def main():
 
   filename = sys.argv[1]
@@ -268,6 +286,7 @@ def main():
   s_posts(f)
   s_comments(f)
   s_monthly_chart(f)
+  s_labels(f)
 
 
 if __name__ == '__main__':
