@@ -1,0 +1,3 @@
+syntax: glob
+# Blogger Export file including generated .cache and .json
+*-??-??-????.xml*
