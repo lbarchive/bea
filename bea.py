@@ -250,12 +250,23 @@ def s_labels(f):
 
   labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))), reverse=True)
   total_labels = len(f['label'])
-  print('{:10,} Labels {:10.3f} Labeled per label'.format(total_labels, sum(count for count, label in labels) / total_labels))
+  total_labeled = sum(count for count, label in labels)
+  print('{:10,} Labels labled {:10,} times {:10.3f} Labeled per label'.format(total_labels, total_labeled, total_labeled / total_labels))
 
   section('Most Labeled Labels', level=2)
   i = 0
   for count, label in labels:
-    print('{:5}: {}'.format(count, label))
+    print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_labeled, label))
+    i += 1
+    if i >= 10:
+      break
+
+  section('Least Labeled Rate', level=2)
+  labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))))
+  i = 0
+  for count, labels2 in itertools.groupby(labels, key=lambda l: l[0]):
+    labels_count = sum(1 for _ in labels2)
+    print('{:5} ({:5.1f}%) Labels labeled {:3} times'.format(labels_count, 100 * labels_count / total_labels, count))
     i += 1
     if i >= 10:
       break
@@ -282,11 +293,11 @@ def main():
   print(' ', f['title'], 'by', f['author']['name'])
   print(' ', ddd(list(filter(lambda s: 'BLOG_DESCRIPTION' in s['id'], f['settings']))[0]['content'], 76))
 
-  s_general(f)
-  s_posts(f)
+#  s_general(f)
+#  s_posts(f)
   s_comments(f)
-  s_monthly_chart(f)
-  s_labels(f)
+#  s_monthly_chart(f)
+#  s_labels(f)
 
 
 if __name__ == '__main__':
