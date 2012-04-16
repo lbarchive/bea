@@ -201,7 +201,9 @@ def s_comments(f):
 
   section('Comments')
 
-  comments = f['comment']
+  comments = list(filter(lambda c: 'in-reply-to' in c, f['comment']))
+  print('{:10} Comments are not counted in this section.'.format(len(f['comment']) - len(comments)))
+
   posts = f['post']
 
   section('Top Commenters', level=2)
@@ -233,7 +235,7 @@ def s_comments(f):
   i = 0
   # FIXME BAD, SUPER BAD
   for count, post in sorted(
-      [(count/ (datetime.datetime.now(post['published'].tzinfo) - post['published']).days, post) for count, post in (
+      [(count / (datetime.datetime.now(post['published'].tzinfo) - post['published']).days, post) for count, post in (
         (sum(1 for _ in g), list(filter(lambda p: p['id'] == k, posts))[0]) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf))],
       key=lambda item: item[0],
       reverse=True):
