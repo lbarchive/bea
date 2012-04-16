@@ -33,7 +33,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 
 def list_it(d, tag, item):
