@@ -202,7 +202,8 @@ def s_comments(f):
   section('Comments')
 
   comments = list(filter(lambda c: 'in-reply-to' in c, f['comment']))
-  print('{:10} Comments are not counted in this section.'.format(len(f['comment']) - len(comments)))
+  total_comments = len(comments)
+  print('{:5} out of {} Comments are not counted in this section.'.format(len(f['comment']) - total_comments, len(f['comment'])))
 
   posts = f['post']
 
@@ -212,7 +213,7 @@ def s_comments(f):
   for count, name in sorted(
       [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
       reverse=True):
-    print('{:5}: {}'.format(count, name))
+    print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, name))
     i += 1
     if i >= 10:
       break
@@ -224,8 +225,8 @@ def s_comments(f):
   for count, ref in sorted(
       [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
       reverse=True):
-    title = ddd(list(filter(lambda p: p['id'] == ref, posts))[0]['title'], 78 - 5 - 2)
-    print('{:5}: {}'.format(count, title))
+    title = ddd(list(filter(lambda p: p['id'] == ref, posts))[0]['title'], 78 - 5 - 9 - 2)
+    print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, title))
     i += 1
     if i >= 10:
       break
@@ -295,11 +296,11 @@ def main():
   print(' ', f['title'], 'by', f['author']['name'])
   print(' ', ddd(list(filter(lambda s: 'BLOG_DESCRIPTION' in s['id'], f['settings']))[0]['content'], 76))
 
-#  s_general(f)
-#  s_posts(f)
+  s_general(f)
+  s_posts(f)
   s_comments(f)
-#  s_monthly_chart(f)
-#  s_labels(f)
+  s_monthly_chart(f)
+  s_labels(f)
 
 
 if __name__ == '__main__':
