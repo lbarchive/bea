@@ -33,7 +33,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 def list_it(d, tag, item):
@@ -153,20 +153,60 @@ def s_posts(f):
   print('{:10,} Labels {:10,.3f} per post'.format(total_labels, total_labels / total_posts))
 
 
-def s_monthly_chart(f):
+def s_posts_comments_grouper(posts, comments, key_fmt):
 
-  section('Posts and Comments by Month')
-
-  posts = f['post']
-  comments = f['comment']
-
+  kf = lambda p: p['published'].strftime(key_fmt)
   m_pc = {}
-  for k, g in itertools.groupby(posts, key=lambda p: p['published'].strftime('%Y-%m')):
+  for k, g in itertools.groupby(sorted(posts, key=kf), key=kf):
     m_pc[k] = [sum(1 for _ in g), 0]
-  for k, g in itertools.groupby(comments, key=lambda c: c['published'].strftime('%Y-%m')):
+  for k, g in itertools.groupby(sorted(comments, key=kf), key=kf):
     if k not in m_pc:
       m_pc[k] = [0, 0]
     m_pc[k][1] = sum(1 for _ in g)
+  return m_pc
+
+
+def s_two_columns_chart(data, keys, column_names):
+
+  max_c1_count, min_c1_count = (max(item[0] for item in data.values()),
+                                min(item[0] for item in data.values()))
+  max_c2_count, min_c2_count = (max(item[1] for item in data.values()),
+                                min(item[1] for item in data.values()))
+
+  c0_size = max(len(column_names[0]), max(len(key) for key in keys))
+  half = int((78 - c0_size - 2) / 2)
+  c0_size += 78 - half * 2 - 2 - c0_size
+  column_sizes = [c0_size, half, half] 
+
+  value_size = len(str(max_c1_count)), len(str(max_c2_count))
+  bar_size = tuple(half - v - 1 for v in value_size)
+  del c0_size, half
+
+  print('{0[0]:^{1[0]}} {0[1]:<{1[1]}}|{0[2]:>{1[2]}}'.format(column_names, column_sizes))
+  for key in keys:
+    count = data[key] if key in data else [0, 0]
+    print('{:^{key_size}} {:{value_size[0]}} {:>{bar_size[0]}}|{:<{bar_size[1]}} {:{value_size[1]}}'.format(
+          key,
+          count[0],
+          '#'*int(bar_size[0] * count[0] / max_c1_count),
+          '#'*int(bar_size[1] * count[1] / max_c2_count),
+          count[1],
+          key_size=column_sizes[0],
+          value_size=value_size,
+          bar_size=bar_size
+          ))
+
+
+def s_posts_comments(f):
+
+  section('Posts and Comments Published Time')
+  
+  posts = f['post']
+  comments = f['comment']
+
+  section('By Year and Month', level=2)
+
+  m_pc = s_posts_comments_grouper(posts, comments, '%Y-%m')
 
   m_pc_keys = m_pc.keys()
   m_min = min(m_pc_keys).split('-')
@@ -175,26 +215,39 @@ def s_monthly_chart(f):
   max_year, max_month = int(m_max[0]), int(m_max[1])
   del m_pc_keys, m_min, m_max
 
-  max_p_count, min_p_count = max(p[0] for p in m_pc.values()), min(p[0] for p in m_pc.values())
-  max_c_count, min_c_count = max(p[1] for p in m_pc.values()), min(p[1] for p in m_pc.values())
+  keys = tuple('%d-%02d' % (year, month) \
+               for year in range(min_year, max_year + 1) \
+               for month in range(1, 12 + 1))
+  keys = keys[min_month - 1:-(12 - max_month)]
+  s_two_columns_chart(m_pc, keys, ('YYYY-MM', 'Posts', 'Comments'))
 
-  print('{} {:<34}|{:>35}'.format('YYYY-MM', 'Posts', 'Comments'))
-  for year in range(min_year, max_year+1):
-    for month in range(1, 12+1):
-      if year == min_year and month < min_month:
-        continue
-      if year == max_year and month > max_month:
-        break
-      key = '%d-%02d' % (year, month)
-      count = m_pc[key] if key in m_pc else [0, 0]
-      # 7 + 1 + 3 + 1 + ? + 1 + ? + 1 + 4 = 2 * ? + 18
-      print('{} {:3} {:>30}|{:<30} {:4}'.format(
-            key,
-            count[0],
-            '#'*int(30 * count[0] / max_p_count),
-            '#'*int(30 * count[1] / max_c_count),
-            count[1]
-            ))
+  section('By Year', level=2)
+
+  m_pc = s_posts_comments_grouper(posts, comments, '%Y')
+
+  m_pc_keys = m_pc.keys()
+  min_year, max_year = int(min(m_pc_keys)), int(max(m_pc_keys))
+  del m_pc_keys
+
+  keys = tuple(str(key) for key in range(min_year, max_year + 1))
+  s_two_columns_chart(m_pc, keys, ('Year', 'Posts', 'Comments'))
+
+  section('By Month of Year', level=2)
+
+  m_pc = s_posts_comments_grouper(posts, comments, '%m')
+  keys = tuple('%02d' % key for key in range(1, 12 + 1))
+  s_two_columns_chart(m_pc, keys, ('Month', 'Posts', 'Comments'))
+
+  section('By Day of Month', level=2)
+
+  m_pc = s_posts_comments_grouper(posts, comments, '%d')
+  keys = tuple('%02d' % key for key in range(1, 31 + 1))
+  s_two_columns_chart(m_pc, keys, ('Day', 'Posts', 'Comments'))
+
+  section('By Hour of Day', level=2)
+
+  keys = tuple('%02d' % key for key in range(1, 24 + 1))
+  s_two_columns_chart(m_pc, keys, ('Hour', 'Posts', 'Comments'))
 
 
 def s_comments(f):
@@ -299,7 +352,7 @@ def main():
   s_general(f)
   s_posts(f)
   s_comments(f)
-  s_monthly_chart(f)
+  s_posts_comments(f)
   s_labels(f)
 
 
