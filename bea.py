@@ -156,14 +156,14 @@ def s_posts(f):
 def s_posts_comments_grouper(posts, comments, key_fmt):
 
   kf = lambda p: p['published'].strftime(key_fmt)
-  m_pc = {}
-  for k, g in itertools.groupby(sorted(posts, key=kf), key=kf):
-    m_pc[k] = [sum(1 for _ in g), 0]
-  for k, g in itertools.groupby(sorted(comments, key=kf), key=kf):
-    if k not in m_pc:
-      m_pc[k] = [0, 0]
-    m_pc[k][1] = sum(1 for _ in g)
-  return m_pc
+  ig_p = itertools.groupby(sorted(posts, key=kf), key=kf)
+  ig_c = itertools.groupby(sorted(comments, key=kf), key=kf)
+
+  icount = lambda i: sum(1 for _ in i)
+  d_p = dict((k, icount(g)) for k, g in ig_p)
+  d_c = dict((k, icount(g)) for k, g in ig_c)
+  keys = d_p.keys() | d_c.keys()
+  return dict((key, (d_p.get(key, 0), d_c.get(key, 0))) for key in keys)
 
 
 def s_two_columns_chart(data, keys, column_names):
