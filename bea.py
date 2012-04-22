@@ -86,6 +86,11 @@ def to_dict(e):
           chars = sum(len(w) for w in words)
           _c['words'] = len(words)
           _c['chars'] = chars
+          if scheme == 'post':
+            # published doesn't have microseconds, but updated has, add new
+            # value with no microseconds
+            _c['updated_no_us'] = _c['updated'].replace(microsecond=0)
+            _c['updated_after'] = _c['updated_no_us'] - _c['published']
         if 'control' in _c:
           if _c['control']['draft'] == 'yes':
             del _c['control']
@@ -148,6 +153,13 @@ def s_posts(f):
   section('Posts')
 
   total_posts = len(f['post'])
+
+  updated_posts = tuple(p for p in f['post'] if p['updated_after'])
+  total_updated_after = sum(p['updated_after'].total_seconds() for p in updated_posts)
+  avg_updated_after = datetime.timedelta(seconds=total_updated_after / len(updated_posts))
+  print('{:6,} Posts {:6,} Updated (after {} in average)'.format(total_posts, len(updated_posts), avg_updated_after))
+  print()
+
   total_words = sum(p['words'] for p in f['post'])
   total_chars = sum(p['chars'] for p in f['post'])
   total_labels = sum(len(p.get('label', [])) for p in f['post'])

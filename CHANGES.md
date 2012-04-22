@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+Development
+-----------
+
+ * Add post updating stats
+
 Version 0.0.3 (2012-04-20T18:20:50Z)
 ------------------------------------
 
