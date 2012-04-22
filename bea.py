@@ -36,6 +36,9 @@ __license__ = 'MIT'
 __version__ = '0.0.3'
 
 
+CACHE_VERSION = 1
+
+
 def list_it(d, tag, item):
 
   if tag in d:
@@ -333,13 +336,14 @@ def main():
   filename = sys.argv[1]
   filename_cache = filename + '.cache'
   cache = shelve.open(filename_cache)
-  if 'feed' in cache:
+  if 'feed' in cache and cache.get('CACHE_VERSION', None) == CACHE_VERSION:
     f = cache['feed']
   else:
     d = etree.parse(filename)
     r = d.getroot()
     f, t = to_dict(r)
     cache['feed'] = f
+    cache['CACHE_VERSION'] = CACHE_VERSION
     # XXX not really a json file, just for syntax highlighting
     with open(filename + '.json', 'w') as json_file:
       import pprint
