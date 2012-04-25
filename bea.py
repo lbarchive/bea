@@ -26,6 +26,7 @@ import itertools
 from lxml import etree
 from lxml import html
 import os
+import re
 import shelve
 import sys
 
@@ -33,7 +34,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 CACHE_VERSION = 1
@@ -122,6 +123,22 @@ def ddd(text, max_l):
   return text
 
 
+WORD_FREQ_RE = re.compile(r'\b[0-9a-z-\'.]+\b', re.I)
+def word_freq(text):
+
+  wf = {}
+  for k, g in itertools.groupby(sorted(w.group().lower() for w in WORD_FREQ_RE.finditer(text) if w.group())):
+    wf[k] = sum(1 for _ in g)
+  
+  return wf
+
+
+def merge_word_freq(wf, wf1):
+
+  for w, c in wf1.items():
+    wf[w] = c + wf.get(w, 0)
+
+
 def s_general(f):
 
   section('General')
@@ -166,6 +183,26 @@ def s_posts(f):
   print('{:10,} Words  {:10,.3f} per post'.format(total_words, total_words / total_posts))
   print('{:10,} Chars  {:10,.3f} per post'.format(total_chars, total_chars / total_posts))
   print('{:10,} Labels {:10,.3f} per post'.format(total_labels, total_labels / total_posts))
+  print()
+
+  num_most_used = int(total_words / total_posts)
+  section('{} most used words'.format(num_most_used, level=2))
+  wf = {}
+  for p in f['post']:
+    merge_word_freq(wf, word_freq(p['text']))
+  wf = sorted(wf.items(), key=lambda wf: wf[1], reverse=True)[:num_most_used]
+
+  # Find a comforable length: median + 3
+  w_len = sorted(len(k) for k, c in wf)
+  w_len = min(w_len[int(len(w_len) / 2)] + 3, max(w_len))
+
+  N = int(79 / (6 + w_len + 1))
+  i = 0
+  for w, c in wf:
+    print('{:5,} {:{w_len}}'.format(c, ddd(w, w_len), w_len=w_len), end='')
+    i += 1
+    print('\n' if i % N == 0 else ' ', end='')
+  print()
 
 
 def s_posts_comments_grouper(posts, comments, key_fmt):
