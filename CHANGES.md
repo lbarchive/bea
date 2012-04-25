@@ -3,6 +3,10 @@ CHANGES
 
 ## Development
 
+## Version 0.0.4.1 (2012-04-25T23:31:04Z)
+
+ * Fix wrong section heading level
+
 ## Version 0.0.4 (2012-04-25T23:22:24Z)
 
  * Add post updating stats

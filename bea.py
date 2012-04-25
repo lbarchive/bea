@@ -34,7 +34,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.4'
+__version__ = '0.0.4.1'
 
 
 CACHE_VERSION = 1
@@ -186,7 +186,7 @@ def s_posts(f):
   print()
 
   num_most_used = int(total_words / total_posts)
-  section('{} most used words'.format(num_most_used, level=2))
+  section('{} most used words'.format(num_most_used), level=2)
   wf = {}
   for p in f['post']:
     merge_word_freq(wf, word_freq(p['text']))
