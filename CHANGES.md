@@ -3,6 +3,8 @@ CHANGES
 
 ## Development
 
+ * Add date range filter
+
 ## Version 0.0.4.2 (2012-12-03T02:49:21Z)
 
  * Fix month=December cause incorrect list slicing

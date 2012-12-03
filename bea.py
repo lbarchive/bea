@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 
+import argparse
 import datetime
 import itertools
 from lxml import etree
@@ -382,7 +383,17 @@ def s_labels(f):
 
 def main():
 
-  filename = sys.argv[1]
+  parser = argparse.ArgumentParser()
+  parser.add_argument('xml', help='Exported XML file')
+  parser.add_argument('--d1',
+                      type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S%z'),
+                      metavar='YYYY-MM-DDTHH:MM:SS+HHMM')
+  parser.add_argument('--d2',
+                      type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S%z'),
+                      metavar='YYYY-MM-DDTHH:MM:SS+HHMM')
+  args = parser.parse_args()
+
+  filename = args.xml
   filename_cache = filename + '.cache'
   cache = shelve.open(filename_cache)
   if 'feed' in cache and cache.get('CACHE_VERSION', None) == CACHE_VERSION:
@@ -397,6 +408,18 @@ def main():
     with open(filename + '.json', 'w') as json_file:
       import pprint
       pprint.pprint(f, json_file)
+
+  # filter
+  if args.d1:
+    f['post'] = list(p for p in f['post'] if p['published'] >= args.d1)
+    f['comment'] = list(c for c in f['comment'] if c['published'] >= args.d1)
+  if args.d2:
+    f['post'] = list(p for p in f['post'] if p['published'] <= args.d2)
+    f['comment'] = list(c for c in f['comment'] if c['published'] <= args.d2)
+  # remove comments which don't have post to belong to
+  post_ids = list(p['id'] for p in f['post'])
+  f['comment'] = list(c for c in f['comment'] if c['in-reply-to']['ref'] in post_ids)
+  del post_ids
 
   # generate list of labels, if not preset. Sometime between 12/03/2012 and
   # 07/01/2012, labels are removed from exported file.
