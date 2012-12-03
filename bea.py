@@ -35,7 +35,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.4.2'
+__version__ = '0.0.5'
 
 
 CACHE_VERSION = 1
@@ -138,6 +138,19 @@ def merge_word_freq(wf, wf1):
 
   for w, c in wf1.items():
     wf[w] = c + wf.get(w, 0)
+
+
+def s_filter(args):
+
+  if not args.pubdate:
+    return
+
+  section('Filter')
+
+  diff = '-----'
+  if args.pubdate[0] and args.pubdate[1]:
+    diff = (args.pubdate[1] - args.pubdate[0]).days
+  print('{0[0]!s:<30} <- {1:5} days -> {0[1]!s:>30}'.format(args.pubdate, diff))
 
 
 def s_general(f):
@@ -355,7 +368,7 @@ def s_comments(f):
 
 def s_labels(f):
 
-  section('General')
+  section('Labels')
 
   labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))), reverse=True)
   total_labels = len(f['label'])
@@ -381,15 +394,18 @@ def s_labels(f):
       break
 
 
+def date_type(d):
+
+  if d:
+    return datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S%z')
+  return None
+
+
 def main():
 
   parser = argparse.ArgumentParser()
   parser.add_argument('xml', help='Exported XML file')
-  parser.add_argument('--d1',
-                      type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S%z'),
-                      metavar='YYYY-MM-DDTHH:MM:SS+HHMM')
-  parser.add_argument('--d2',
-                      type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S%z'),
+  parser.add_argument('--pubdate', nargs=2, type=date_type,
                       metavar='YYYY-MM-DDTHH:MM:SS+HHMM')
   args = parser.parse_args()
 
@@ -410,25 +426,27 @@ def main():
       pprint.pprint(f, json_file)
 
   # filter
-  if args.d1:
-    f['post'] = list(p for p in f['post'] if p['published'] >= args.d1)
-    f['comment'] = list(c for c in f['comment'] if c['published'] >= args.d1)
-  if args.d2:
-    f['post'] = list(p for p in f['post'] if p['published'] <= args.d2)
-    f['comment'] = list(c for c in f['comment'] if c['published'] <= args.d2)
+  if args.pubdate:
+    d1, d2 = args.pubdate
+    for key in ('post', 'page', 'comment'):
+      if d1:
+        f[key] = list(p for p in f[key] if p['published'] >= d1)
+      if d2:
+        f[key] = list(p for p in f[key] if p['published'] <= d2)
+
   # remove comments which don't have post to belong to
   post_ids = list(p['id'] for p in f['post'])
   f['comment'] = list(c for c in f['comment'] if c['in-reply-to']['ref'] in post_ids)
   del post_ids
 
-  # generate list of labels, if not preset. Sometime between 12/03/2012 and
-  # 07/01/2012, labels are removed from exported file.
-  if 'label' not in f:
-    f['label'] = list(set(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))
+  # generate list of labels
+  f['label'] = list(set(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))
 
   section('{} {}'.format(__program__, __version__), 0)
   print(' ', f['title'], 'by', f['author']['name'])
   print(' ', ddd(list(filter(lambda s: 'BLOG_DESCRIPTION' in s['id'], f['settings']))[0]['content'], 76))
+
+  s_filter(args)
 
   s_general(f)
   s_posts(f)
