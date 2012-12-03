@@ -34,7 +34,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.4.1'
+__version__ = '0.0.4.2'
 
 
 CACHE_VERSION = 1
@@ -270,7 +270,7 @@ def s_posts_comments(f):
   keys = tuple('%d-%02d' % (year, month) \
                for year in range(min_year, max_year + 1) \
                for month in range(1, 12 + 1))
-  keys = keys[min_month - 1:-(12 - max_month)]
+  keys = keys[min_month - 1:-(12 - max_month) or None]
   s_two_columns_chart(m_pc, keys, ('YYYY-MM', 'Posts', 'Comments'))
 
   section('By Year', level=2)
@@ -397,6 +397,11 @@ def main():
     with open(filename + '.json', 'w') as json_file:
       import pprint
       pprint.pprint(f, json_file)
+
+  # generate list of labels, if not preset. Sometime between 12/03/2012 and
+  # 07/01/2012, labels are removed from exported file.
+  if 'label' not in f:
+    f['label'] = list(set(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))
 
   section('{} {}'.format(__program__, __version__), 0)
   print(' ', f['title'], 'by', f['author']['name'])

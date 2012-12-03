@@ -3,6 +3,11 @@ CHANGES
 
 ## Development
 
+## Version 0.0.4.2 (2012-12-03T02:49:21Z)
+
+ * Fix month=December cause incorrect list slicing
+ * Fix removed labels from exported file
+
 ## Version 0.0.4.1 (2012-04-25T23:31:04Z)
 
  * Fix wrong section heading level
