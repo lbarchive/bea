@@ -3,6 +3,10 @@ CHANGES
 
 ## Development
 
+## Version 0.0.6 (2012-12-08T22:01:41Z)
+
+ * Add number of posts which have comments
+
 ## Version 0.0.5 (2012-12-03T20:38:01Z)
 
  * Add date range filter

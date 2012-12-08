@@ -35,7 +35,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 
 CACHE_VERSION = 1
@@ -322,9 +322,19 @@ def s_comments(f):
 
   comments = list(filter(lambda c: 'in-reply-to' in c, f['comment']))
   total_comments = len(comments)
-  print('{:5} out of {} Comments are not counted in this section.'.format(len(f['comment']) - total_comments, len(f['comment'])))
-
   posts = f['post']
+  total_posts = len(posts)
+
+  kf = lambda c: c['in-reply-to']['ref']
+  commented_posts = len(set(map(kf, comments)))
+  print('{:5} comments commented on {:5} ({:5.1f}%) of {:5} posts'.format(
+    total_comments,
+    commented_posts,
+    100 * commented_posts / total_posts,
+    total_posts))
+  print()
+ 
+  print('{:5} out of {} Comments are not counted in this section.'.format(len(f['comment']) - total_comments, len(f['comment'])))
 
   section('Top Commenters', level=2)
   kf = lambda c: c['author']['name']
