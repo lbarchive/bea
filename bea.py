@@ -175,9 +175,10 @@ def s_general(f):
   print('{:<30} <- {:4.1f} years -> {:>30}'.format('First post', years, 'Last post'))
   print('{:<30} <- {:3.0f} months -> {:>30}'.format(
     ddd(f['post'][-1]['title'], 30), months, ddd(f['post'][0]['title'], 30)))
-  print('{!s:<30} <- {:5} days -> {!s:>30}'.format(f['post'][-1]['published'],
+  print('{!s:<30} <- {:5} days -> {!s:>30}'.format(
+        f['post'][-1]['published'].strftime('%Y-%m-%d %H:%M:%S %Z'),
         (f['post'][0]['published'] - f['post'][-1]['published']).days,
-        f['post'][0]['published']))
+        f['post'][0]['published'].strftime('%Y-%m-%d %H:%M:%S %Z')))
 
 
 def s_posts(f):
