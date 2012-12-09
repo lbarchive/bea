@@ -7,7 +7,9 @@ Blogger Export Analyzer (BEA) is a simple analyzer for Blogger Export XML file. 
 Usage
 -----
 
-    ./bea.py blog-MM-DD-YYYY.xml
+Go to Blogger blog's dashboard, *Settings* » *Other* » *Blog tools*, click on *Export blog* to download an export XML file, then run:
+
+    ./bea.py [options] blog-MM-DD-YYYY.xml
 
 Options
 -------
