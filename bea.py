@@ -35,7 +35,8 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.0.6'
+__version__ = '0.0.7dev'
+__website__ = 'https://bitbucket.org/livibetter/bea'
 
 
 CACHE_VERSION = 1
@@ -452,7 +453,8 @@ def main():
   # generate list of labels
   f['label'] = list(set(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))
 
-  section('{} {}'.format(__program__, __version__), 0)
+  print('= {:=<37s}{:=>37s} ='.format('{} {} '.format(__program__, __version__), ' ' + __website__))
+  print()
   print(' ', f['title'], 'by', f['author']['name'])
   print(' ', ddd(list(filter(lambda s: 'BLOG_DESCRIPTION' in s['id'], f['settings']))[0]['content'], 76))
 
