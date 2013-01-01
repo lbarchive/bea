@@ -24,6 +24,7 @@
 import argparse
 import datetime
 import itertools
+from itertools import chain, groupby, islice
 from lxml import etree
 from lxml import html
 import os
@@ -129,7 +130,7 @@ WORD_FREQ_RE = re.compile(r'\b[0-9a-z-\'.]+\b', re.I)
 def word_freq(text):
 
   wf = {}
-  for k, g in itertools.groupby(sorted(w.group().lower() for w in WORD_FREQ_RE.finditer(text) if w.group())):
+  for k, g in groupby(sorted(w.group().lower() for w in WORD_FREQ_RE.finditer(text) if w.group())):
     wf[k] = sum(1 for _ in g)
   
   return wf
@@ -156,6 +157,11 @@ def gen_toplist(_list, count, total=None):
   _list = _list[:count]
   _list.append(calc_others(_list, total))
   return _list
+
+
+# ========
+# Sections
+# ========
 
 
 def s_filter(args):
@@ -241,8 +247,8 @@ def s_posts(f):
 def s_posts_comments_grouper(posts, comments, key_fmt):
 
   kf = lambda p: p['published'].strftime(key_fmt)
-  ig_p = itertools.groupby(sorted(posts, key=kf), key=kf)
-  ig_c = itertools.groupby(sorted(comments, key=kf), key=kf)
+  ig_p = groupby(sorted(posts, key=kf), key=kf)
+  ig_c = groupby(sorted(comments, key=kf), key=kf)
 
   icount = lambda i: sum(1 for _ in i)
   d_p = dict((k, icount(g)) for k, g in ig_p)
@@ -353,10 +359,12 @@ def s_comments(f):
     total_posts))
   print()
  
-  print('{:5} out of {} Comments are not counted in this section.'.format(len(f['comment']) - total_comments, len(f['comment'])))
+  print('{:5} out of {} Comments are not counted in this section.'.format(
+    len(f['comment']) - total_comments,
+    len(f['comment'])))
   
-  genlist = lambda kf: gen_toplist(list(itertools.islice(sorted(
-      [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
+  genlist = lambda kf: gen_toplist(list(islice(sorted(
+      [(sum(1 for _ in g), k) for k, g in groupby(sorted(comments, key=kf), key=kf)],
       reverse=True), 10)), 10, total_comments)
 
   section('Top Commenters', level=2)
@@ -379,7 +387,7 @@ def s_comments(f):
   # FIXME BAD, SUPER BAD
   for count, post in sorted(
       [(count / (datetime.datetime.now(post['published'].tzinfo) - post['published']).days, post) for count, post in (
-        (sum(1 for _ in g), list(filter(lambda p: p['id'] == k, posts))[0]) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf))],
+        (sum(1 for _ in g), list(filter(lambda p: p['id'] == k, posts))[0]) for k, g in groupby(sorted(comments, key=kf), key=kf))],
       key=lambda item: item[0],
       reverse=True):
     title = ddd(post['title'], 78 - 5 - 2)
@@ -393,7 +401,11 @@ def s_labels(f):
 
   section('Labels')
 
-  labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))), reverse=True)
+  genlist = lambda reverse=True: sorted(
+      ((sum(1 for _ in g), k) for k, g in groupby(sorted(chain.from_iterable(p.get('label', []) for p in f['post'])))),
+      reverse=reverse)
+
+  labels = genlist()
   total_labels = len(f['label'])
   total_labeled = sum(count for count, label in labels)
   print('{:10,} Labels labled {:10,} times {:10.3f} Labeled per label'.format(total_labels, total_labeled, total_labeled / total_labels))
@@ -404,14 +416,15 @@ def s_labels(f):
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_labeled, label))
 
   section('Least Labeled Rate', level=2)
-  labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))))
-  i = 0
-  for count, labels2 in itertools.groupby(labels, key=lambda l: l[0]):
+  labels = genlist(False)
+  for count, labels2 in islice(groupby(labels, key=lambda l: l[0]), 10):
     labels_count = sum(1 for _ in labels2)
     print('{:5} ({:5.1f}%) Labels labeled {:3} times'.format(labels_count, 100 * labels_count / total_labels, count))
-    i += 1
-    if i >= 10:
-      break
+
+
+# ====
+# Main
+# ====
 
 
 def date_type(d):
@@ -460,7 +473,7 @@ def main():
   del post_ids
 
   # generate list of labels
-  f['label'] = list(set(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))
+  f['label'] = list(set(chain.from_iterable(p.get('label', []) for p in f['post'])))
 
   print('= {:=<37s}{:=>37s} ='.format('{} {} '.format(__program__, __version__), ' ' + __website__))
   print()
