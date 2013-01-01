@@ -141,6 +141,23 @@ def merge_word_freq(wf, wf1):
     wf[w] = c + wf.get(w, 0)
 
 
+def calc_others(top_list, total):
+  '''Calculate the others amount from top list'''
+
+  others = total - sum(count for count, item in top_list)
+  return (others, '<Others>')
+
+
+def gen_toplist(_list, count, total=None):
+  '''Return a top list of a sorted list'''
+
+  if total is None:
+    total = sum(count for count, item in _list)
+  _list = _list[:count]
+  _list.append(calc_others(_list, total))
+  return _list
+
+
 def s_filter(args):
 
   if not args.pubdate:
@@ -337,30 +354,24 @@ def s_comments(f):
   print()
  
   print('{:5} out of {} Comments are not counted in this section.'.format(len(f['comment']) - total_comments, len(f['comment'])))
+  
+  genlist = lambda kf: gen_toplist(list(itertools.islice(sorted(
+      [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
+      reverse=True), 10)), 10, total_comments)
 
   section('Top Commenters', level=2)
-  kf = lambda c: c['author']['name']
-  i = 0
-  for count, name in sorted(
-      [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
-      reverse=True):
+  _list = genlist(lambda c: c['author']['name'])
+  for count, name in _list:
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, name))
-    i += 1
-    if i >= 10:
-      break
     
   section('Most Commented Posts', level=2)
-  kf = lambda c: c['in-reply-to']['ref']
-  i = 0
-  # FIXME BAD, BAD
-  for count, ref in sorted(
-      [(sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(comments, key=kf), key=kf)],
-      reverse=True):
-    title = ddd(list(filter(lambda p: p['id'] == ref, posts))[0]['title'], 78 - 5 - 9 - 2)
+  _list = genlist(lambda c: c['in-reply-to']['ref'])
+  for count, ref in _list:
+    if ref.startswith('tag:blogger.com'):
+      title = ddd(list(filter(lambda p: p['id'] == ref, posts))[0]['title'], 78 - 5 - 9 - 2)
+    else:
+      title = ref
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, title))
-    i += 1
-    if i >= 10:
-      break
  
   section('Most Commented Posts Over Days Since Published aka. Popular Posts', level=2)
   kf = lambda c: c['in-reply-to']['ref']
@@ -388,12 +399,9 @@ def s_labels(f):
   print('{:10,} Labels labled {:10,} times {:10.3f} Labeled per label'.format(total_labels, total_labeled, total_labeled / total_labels))
 
   section('Most Labeled Labels', level=2)
-  i = 0
-  for count, label in labels:
+  _list = gen_toplist(labels, 10)
+  for count, label in _list:
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_labeled, label))
-    i += 1
-    if i >= 10:
-      break
 
   section('Least Labeled Rate', level=2)
   labels = sorted(((sum(1 for _ in g), k) for k, g in itertools.groupby(sorted(itertools.chain.from_iterable(p.get('label', []) for p in f['post'])))))

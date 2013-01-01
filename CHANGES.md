@@ -3,6 +3,8 @@ CHANGES
 
 ## Development
 
+ * Add Others amount after top lists
+
 ## Version 0.0.6 (2012-12-08T22:01:41Z)
 
  * Add number of posts which have comments
