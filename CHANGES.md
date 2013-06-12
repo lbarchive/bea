@@ -3,6 +3,8 @@ CHANGES
 
 ## Development
 
+## Version 0.1.0 (2013-06-12T05:53:25Z)
+
  * Add Others amount after top lists
  * Add Punchcar section (#2)
 
