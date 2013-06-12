@@ -341,6 +341,41 @@ def s_posts_comments(f):
   s_two_columns_chart(m_pc, keys, ('Hour', 'Posts', 'Comments'))
 
 
+def s_punchcard(f):
+
+  section('Punchcard')
+
+  posts = f['post']
+  comments = f['comment']
+
+  m_pc = s_posts_comments_grouper(posts, comments, '%w-%H')
+
+  punches = ' .oO00'
+  len_punches = len(punches) - 1
+
+  secnames = ('Post Published Time', 'Comment Posted Time')
+  daynames = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+  dayorder = (1, 2, 3, 4, 5, 6, 0)
+
+  for t in range(len(secnames)):
+    section(secnames[t], level=2)
+    max_count = max(item[t] for item in m_pc.values())
+    print('    +', '-' * (24 * 3), '+', sep='')
+    for d in range(7):
+      p = (
+        punches[int(len_punches *
+                    m_pc['%d-%02d' % (dayorder[d], h)][t] /
+                    max_count)] for h in range(24)
+      )
+      print(daynames[d],
+            ' | ',
+            '  '.join(p),
+            ' |',
+            sep='')
+    print('    +', '-' * (24 * 3), '+', sep='')
+    print('     ', ''.join('%3d' % i for i in range(24)), sep='')
+
+
 def s_comments(f):
 
   section('Comments')
@@ -486,6 +521,7 @@ def main():
   s_posts(f)
   s_comments(f)
   s_posts_comments(f)
+  s_punchcard(f)
   s_labels(f)
 
 
