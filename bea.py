@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # Blogger Export Analyzer
 # Copyright (c) 2012-2013 Yu-Jie Lin
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-# of the Software, and to permit persons to whom the Software is furnished to do
-# so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 
 import argparse
@@ -81,7 +81,7 @@ def to_dict(e):
         list_it(d, 'label', _c['term'])
         continue
       if _tag == 'entry':
-        scheme =  _c['scheme']
+        scheme = _c['scheme']
         del _c['scheme']
         if scheme in ['comment', 'post']:
           text = html.fromstring('<div>' + _c['content'] + '</div>').xpath('string()')
@@ -127,12 +127,15 @@ def ddd(text, max_l):
 
 
 WORD_FREQ_RE = re.compile(r'\b[0-9a-z-\'.]+\b', re.I)
+
+
 def word_freq(text):
 
   wf = {}
-  for k, g in groupby(sorted(w.group().lower() for w in WORD_FREQ_RE.finditer(text) if w.group())):
+  g = (w.group().lower() for w in WORD_FREQ_RE.finditer(text) if w.group())
+  for k, g in groupby(sorted(g)):
     wf[k] = sum(1 for _ in g)
-  
+
   return wf
 
 
@@ -267,7 +270,7 @@ def s_two_columns_chart(data, keys, column_names):
   c0_size = max(len(column_names[0]), max(len(key) for key in keys))
   half = int((78 - c0_size - 2) / 2)
   c0_size += 78 - half * 2 - 2 - c0_size
-  column_sizes = [c0_size, half, half] 
+  column_sizes = [c0_size, half, half]
 
   value_size = len(str(max_c1_count)), len(str(max_c2_count))
   bar_size = tuple(half - v - 1 for v in value_size)
@@ -279,8 +282,8 @@ def s_two_columns_chart(data, keys, column_names):
     print('{:^{key_size}} {:{value_size[0]}} {:>{bar_size[0]}}|{:<{bar_size[1]}} {:{value_size[1]}}'.format(
           key,
           count[0],
-          '#'*int(bar_size[0] * count[0] / max_c1_count),
-          '#'*int(bar_size[1] * count[1] / max_c2_count),
+          '#' * int(bar_size[0] * count[0] / max_c1_count),
+          '#' * int(bar_size[1] * count[1] / max_c2_count),
           count[1],
           key_size=column_sizes[0],
           value_size=value_size,
@@ -291,7 +294,7 @@ def s_two_columns_chart(data, keys, column_names):
 def s_posts_comments(f):
 
   section('Posts and Comments Published Time')
-  
+
   posts = f['post']
   comments = f['comment']
 
@@ -306,8 +309,8 @@ def s_posts_comments(f):
   max_year, max_month = int(m_max[0]), int(m_max[1])
   del m_pc_keys, m_min, m_max
 
-  keys = tuple('%d-%02d' % (year, month) \
-               for year in range(min_year, max_year + 1) \
+  keys = tuple('%d-%02d' % (year, month)
+               for year in range(min_year, max_year + 1)
                for month in range(1, 12 + 1))
   keys = keys[min_month - 1:-(12 - max_month) or None]
   s_two_columns_chart(m_pc, keys, ('YYYY-MM', 'Posts', 'Comments'))
@@ -393,11 +396,11 @@ def s_comments(f):
     100 * commented_posts / total_posts,
     total_posts))
   print()
- 
+
   print('{:5} out of {} Comments are not counted in this section.'.format(
     len(f['comment']) - total_comments,
     len(f['comment'])))
-  
+
   genlist = lambda kf: gen_toplist(list(islice(sorted(
       [(sum(1 for _ in g), k) for k, g in groupby(sorted(comments, key=kf), key=kf)],
       reverse=True), 10)), 10, total_comments)
@@ -406,7 +409,7 @@ def s_comments(f):
   _list = genlist(lambda c: c['author']['name'])
   for count, name in _list:
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, name))
-    
+
   section('Most Commented Posts', level=2)
   _list = genlist(lambda c: c['in-reply-to']['ref'])
   for count, ref in _list:
@@ -415,22 +418,24 @@ def s_comments(f):
     else:
       title = ref
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, title))
- 
+
   section('Most Commented Posts Over Days Since Published aka. Popular Posts', level=2)
   kf = lambda c: c['in-reply-to']['ref']
   i = 0
   # FIXME BAD, SUPER BAD
-  for count, post in sorted(
+  g = sorted(
       [(count / (datetime.datetime.now(post['published'].tzinfo) - post['published']).days, post) for count, post in (
         (sum(1 for _ in g), list(filter(lambda p: p['id'] == k, posts))[0]) for k, g in groupby(sorted(comments, key=kf), key=kf))],
       key=lambda item: item[0],
-      reverse=True):
+      reverse=True
+  )
+  for count, post in g:
     title = ddd(post['title'], 78 - 5 - 2)
     print('{:.3f}: {}'.format(count, title))
     i += 1
     if i >= 10:
       break
- 
+
 
 def s_labels(f):
 
