@@ -14,6 +14,10 @@ Go to Blogger blog's dashboard, *Settings* » *Other* » *Blog tools*, click on 
 Options
 -------
 
+### `-d`, `--dump`
+
+Dump cache content into a file in prettyprint format.
+
 ### `--pubdate d1 d2`
 
 `pubdate` allows you to filter on published dates of posts, pages, and comments. The date format is
@@ -34,5 +38,5 @@ You can see [sample output][].
 License
 -------
 
-    Copyright (c) 2012 Yu-Jie Lin
+    Copyright (c) 2012-2013 Yu-Jie Lin
     This program is licensed under the MIT License, see COPYING
