@@ -23,14 +23,11 @@
 
 import argparse
 import datetime
-import itertools
 from itertools import chain, groupby, islice
 from lxml import etree
 from lxml import html
-import os
 import re
 import shelve
-import sys
 
 __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
@@ -67,46 +64,38 @@ def to_dict(e):
       return datetime.datetime.strptime(e.text.replace(':', ''), '%Y-%m-%dT%H%M%S.%f%z'), tag
     return e.text, tag
 
-  for c in children:
-    _c, _tag = to_dict(c)
-    # ignored tags, not really useful for analysis
-    if _tag in ['extendedProperty', 'image', 'link', 'thumbnail']:
-      continue
+  for _c, _tag in (to_dict(c) for c in children):
     # list-type
-    elif _tag in ['category', 'entry', 'link']:
-      if _tag == 'category':
-        if 'scheme' in _c and '#kind' in _c['scheme']:
-          d['scheme'] = _c['term'].split('#')[1]
-          continue
-        list_it(d, 'label', _c['term'])
+    if _tag == 'category':
+      if 'scheme' in _c and '#kind' in _c['scheme']:
+        d['scheme'] = _c['term'].split('#')[1]
         continue
-      if _tag == 'entry':
-        scheme = _c['scheme']
-        del _c['scheme']
-        if scheme in ['comment', 'post']:
-          text = html.fromstring('<div>' + _c['content'] + '</div>').xpath('string()')
-          _c['text'] = text
-          words = text.split()
-          chars = sum(len(w) for w in words)
-          _c['words'] = len(words)
-          _c['chars'] = chars
-          if scheme == 'post':
-            # published doesn't have microseconds, but updated has, add new
-            # value with no microseconds
-            _c['updated_no_us'] = _c['updated'].replace(microsecond=0)
-            _c['updated_after'] = _c['updated_no_us'] - _c['published']
-        if 'control' in _c:
-          if _c['control']['draft'] == 'yes':
-            del _c['control']
-            list_it(d, 'draft', _c)
-            continue
-          # TODO possible other control value?
-        list_it(d, scheme, _c)
-      else:
-        list_it(d, _tag, _c)
+      list_it(d, 'label', _c['term'])
+    if _tag == 'entry':
+      scheme = _c['scheme']
+      del _c['scheme']
+      if scheme in ['comment', 'post']:
+        text = html.fromstring('<div>' + _c['content'] + '</div>').xpath('string()')
+        _c['text'] = text
+        words = text.split()
+        chars = sum(len(w) for w in words)
+        _c['words'] = len(words)
+        _c['chars'] = chars
+        if scheme == 'post':
+          # published doesn't have microseconds, but updated has, add new
+          # value with no microseconds
+          _c['updated_no_us'] = _c['updated'].replace(microsecond=0)
+          _c['updated_after'] = _c['updated_no_us'] - _c['published']
+      if 'control' in _c and _c['control']['draft'] == 'yes':
+        del _c['control']
+        list_it(d, 'draft', _c)
+        continue
+        # TODO possible other control value?
+      list_it(d, scheme, _c)
     elif _tag == 'content':
       d[_tag] = _c['text']
-    else:
+    # ignored tags, not really useful for analysis
+    elif _tag not in ['extendedProperty', 'image', 'link', 'thumbnail']:
       d[_tag] = _c
   return d, tag
 
@@ -239,11 +228,9 @@ def s_posts(f):
   w_len = min(w_len[int(len(w_len) / 2)] + 3, max(w_len))
 
   N = int(79 / (6 + w_len + 1))
-  i = 0
-  for w, c in wf:
-    print('{:5,} {:{w_len}}'.format(c, ddd(w, w_len), w_len=w_len), end='')
-    i += 1
-    print('\n' if i % N == 0 else ' ', end='')
+  for idx, wc in enumerate(wf, 1):
+    print('{:5,} {:{w_len}}'.format(wc[1], ddd(wc[0], w_len), w_len=w_len), end='')
+    print(' ' if idx % N else '\n', end='')
   print()
 
 
@@ -262,10 +249,8 @@ def s_posts_comments_grouper(posts, comments, key_fmt):
 
 def s_two_columns_chart(data, keys, column_names):
 
-  max_c1_count, min_c1_count = (max(item[0] for item in data.values()),
-                                min(item[0] for item in data.values()))
-  max_c2_count, min_c2_count = (max(item[1] for item in data.values()),
-                                min(item[1] for item in data.values()))
+  max_c1_count = max(item[0] for item in data.values())
+  max_c2_count = max(item[1] for item in data.values())
 
   c0_size = max(len(column_names[0]), max(len(key) for key in keys))
   half = int((78 - c0_size - 2) / 2)
@@ -383,13 +368,12 @@ def s_comments(f):
 
   section('Comments')
 
-  comments = list(filter(lambda c: 'in-reply-to' in c, f['comment']))
+  comments = [c for c in f['comment'] if 'in-reply-to' in c]
   total_comments = len(comments)
   posts = f['post']
   total_posts = len(posts)
 
-  kf = lambda c: c['in-reply-to']['ref']
-  commented_posts = len(set(map(kf, comments)))
+  commented_posts = len(set(c['in-reply-to']['ref'] for c in comments))
   print('{:5} comments commented on {:5} ({:5.1f}%) of {:5} posts'.format(
     total_comments,
     commented_posts,
@@ -414,27 +398,23 @@ def s_comments(f):
   _list = genlist(lambda c: c['in-reply-to']['ref'])
   for count, ref in _list:
     if ref.startswith('tag:blogger.com'):
-      title = ddd(list(filter(lambda p: p['id'] == ref, posts))[0]['title'], 78 - 5 - 9 - 2)
+      title = ddd(next(p for p in posts if p['id'] == ref)['title'], 78 - 5 - 9 - 2)
     else:
       title = ref
     print('{:5} ({:5.1f}%): {}'.format(count, 100 * count / total_comments, title))
 
   section('Most Commented Posts Over Days Since Published aka. Popular Posts', level=2)
   kf = lambda c: c['in-reply-to']['ref']
-  i = 0
   # FIXME BAD, SUPER BAD
   g = sorted(
       [(count / (datetime.datetime.now(post['published'].tzinfo) - post['published']).days, post) for count, post in (
-        (sum(1 for _ in g), list(filter(lambda p: p['id'] == k, posts))[0]) for k, g in groupby(sorted(comments, key=kf), key=kf))],
+        (sum(1 for _ in g), next(p for p in posts if p['id'] == k)) for k, g in groupby(sorted(comments, key=kf), key=kf))],
       key=lambda item: item[0],
       reverse=True
   )
-  for count, post in g:
+  for count, post in islice(g, 10):
     title = ddd(post['title'], 78 - 5 - 2)
     print('{:.3f}: {}'.format(count, title))
-    i += 1
-    if i >= 10:
-      break
 
 
 def s_labels(f):
@@ -492,7 +472,7 @@ def main():
   else:
     d = etree.parse(filename)
     r = d.getroot()
-    f, t = to_dict(r)
+    f, _ = to_dict(r)
     cache['feed'] = f
     cache['CACHE_VERSION'] = CACHE_VERSION
   if args.dump:
@@ -520,7 +500,7 @@ def main():
   print('= {:=<37s}{:=>37s} ='.format('{} {} '.format(__program__, __version__), ' ' + __website__))
   print()
   print(' ', f['title'], 'by', f['author']['name'])
-  print(' ', ddd(list(filter(lambda s: 'BLOG_DESCRIPTION' in s['id'], f['settings']))[0]['content'], 76))
+  print(' ', ddd(next(s for s in f['settings'] if 'BLOG_DESCRIPTION' in s['id'])['content'], 76))
 
   s_filter(args)
 
