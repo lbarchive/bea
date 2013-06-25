@@ -33,7 +33,7 @@ __program__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __copyright__ = 'Copyright 2012-2013, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 __website__ = 'http://s.yjl.im/bea'
 
 
