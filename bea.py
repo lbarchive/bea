@@ -478,6 +478,8 @@ def main():
 
   parser = argparse.ArgumentParser()
   parser.add_argument('xml', help='Exported XML file')
+  parser.add_argument('-d', '--dump', action='store_true',
+                      help='dump cache to readable file')
   parser.add_argument('--pubdate', nargs=2, type=date_type,
                       metavar='YYYY-MM-DDTHH:MM:SS+HHMM')
   args = parser.parse_args()
@@ -493,10 +495,10 @@ def main():
     f, t = to_dict(r)
     cache['feed'] = f
     cache['CACHE_VERSION'] = CACHE_VERSION
-    # XXX not really a json file, just for syntax highlighting
-    with open(filename + '.json', 'w') as json_file:
+  if args.dump:
+    with open(filename + '.dump.py', 'w') as dump_file:
       import pprint
-      pprint.pprint(f, json_file)
+      pprint.pprint(f, dump_file)
 
   # filter
   if args.pubdate:
