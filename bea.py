@@ -352,7 +352,7 @@ def s_punchcard(f):
     for d in range(7):
       p = (
         punches[int(len_punches *
-                    m_pc['%d-%02d' % (dayorder[d], h)][t] /
+                    m_pc.get('%d-%02d' % (dayorder[d], h), (0, 0))[t] /
                     max_count)] for h in range(24)
       )
       print(daynames[d],
