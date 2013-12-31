@@ -456,7 +456,9 @@ def date_type(d):
 
 def main():
 
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(description=__program__)
+  parser.add_argument('-v', '--version', action='version',
+                      version='%(prog)s ' + __version__)
   parser.add_argument('xml', help='Exported XML file')
   parser.add_argument('-d', '--dump', action='store_true',
                       help='dump cache to readable file')

@@ -1,3 +1,6 @@
 syntax: glob
+build
+dist
+MANIFEST
 # Blogger Export file including generated .cache and .json
 blog-??-??-????.xml*
