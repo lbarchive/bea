@@ -35,7 +35,7 @@ __author__ = 'Yu-Jie Lin'
 __email__ = 'livibetter@gmail.com'
 __copyright__ = 'Copyright 2012-2013, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __website__ = 'http://s.yjl.im/bea'
 
 

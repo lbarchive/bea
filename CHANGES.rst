@@ -5,6 +5,9 @@ CHANGES
 Development
 ===========
 
+Version 0.2.1 (2013-12-31T12:02:53Z)
+====================================
+
 * fix empty post raising error about None
 * fix punchcard when no enough data to fill the card raising KeyError
 * add build system
