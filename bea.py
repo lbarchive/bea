@@ -75,7 +75,7 @@ def to_dict(e):
       scheme = _c['scheme']
       del _c['scheme']
       if scheme in ['comment', 'post']:
-        text = html.fromstring('<div>' + _c['content'] + '</div>').xpath('string()')
+        text = html.fromstring('<div>' + (_c['content'] or '') + '</div>').xpath('string()')
         _c['text'] = text
         words = text.split()
         chars = sum(len(w) for w in words)
