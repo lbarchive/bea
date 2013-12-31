@@ -23,14 +23,16 @@
 
 import argparse
 import datetime
-from itertools import chain, groupby, islice
-from lxml import etree
-from lxml import html
 import re
 import shelve
+from itertools import chain, groupby, islice
 
-__program__ = 'Blogger Export Analyzer'
+from lxml import etree, html
+
+__program__ = 'bea'
+__description__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
+__email__ = 'livibetter@gmail.com'
 __copyright__ = 'Copyright 2012-2013, Yu Jie Lin'
 __license__ = 'MIT'
 __version__ = '0.2.0'
@@ -456,7 +458,7 @@ def date_type(d):
 
 def main():
 
-  parser = argparse.ArgumentParser(description=__program__)
+  parser = argparse.ArgumentParser(description=__description__)
   parser.add_argument('-v', '--version', action='version',
                       version='%(prog)s ' + __version__)
   parser.add_argument('xml', help='Exported XML file')
