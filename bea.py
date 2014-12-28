@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Blogger Export Analyzer
-# Copyright (c) 2012-2013 Yu-Jie Lin
+# Copyright (c) 2012-2014 Yu-Jie Lin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,9 @@ __program__ = 'bea'
 __description__ = 'Blogger Export Analyzer'
 __author__ = 'Yu-Jie Lin'
 __email__ = 'livibetter@gmail.com'
-__copyright__ = 'Copyright 2012-2013, Yu Jie Lin'
+__copyright__ = 'Copyright 2012-2014, Yu Jie Lin'
 __license__ = 'MIT'
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __website__ = 'http://s.yjl.im/bea'
 
 
