@@ -270,7 +270,7 @@ def s_two_columns_chart(data, keys, column_names):
           key,
           count[0],
           '#' * int(bar_size[0] * count[0] / max_c1_count),
-          '#' * int(bar_size[1] * count[1] / max_c2_count),
+          '#' * int(bar_size[1] * count[1] / (max_c2_count or 1)),
           count[1],
           key_size=column_sizes[0],
           value_size=value_size,
@@ -355,7 +355,7 @@ def s_punchcard(f):
       p = (
         punches[int(len_punches *
                     m_pc.get('%d-%02d' % (dayorder[d], h), (0, 0))[t] /
-                    max_count)] for h in range(24)
+                    (max_count or 1))] for h in range(24)
       )
       print(daynames[d],
             ' | ',
@@ -371,6 +371,10 @@ def s_comments(f):
   section('Comments')
 
   comments = [c for c in f['comment'] if 'in-reply-to' in c]
+  if not comments:
+    print('  No comments')
+    return
+
   total_comments = len(comments)
   posts = f['post']
   total_posts = len(posts)
@@ -430,6 +434,10 @@ def s_labels(f):
   labels = genlist()
   total_labels = len(f['label'])
   total_labeled = sum(count for count, label in labels)
+  if not total_labeled:
+    print('  No labels')
+    return
+
   print('{:10,} Labels labled {:10,} times {:10.3f} Labeled per label'.format(total_labels, total_labeled, total_labeled / total_labels))
 
   section('Most Labeled Labels', level=2)

@@ -5,6 +5,8 @@ CHANGES
 Development
 ===========
 
+* fix ``ZeroDivisionError`` on zero comments and/or labels
+
 Version 0.2.1 (2013-12-31T12:02:53Z)
 ====================================
 
